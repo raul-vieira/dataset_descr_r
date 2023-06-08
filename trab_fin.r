@@ -19,6 +19,7 @@ nlevels(as.factor(df$Diagnosis_Definition))
 # which is the most expensive service
 which.max(df$Avg_Covered_Charges)
 df$Diagnosis_Description[18746]
+# LIVER TRANSPLANT WITH MCC OR INTESTINAL TRANSPLANT is the most expensive service registered
 
 # defining function to remove outliers
 trim <- function(x){
@@ -37,6 +38,7 @@ hist(trim(df$Avg_Total_Payments), xlab = 'Payments ($)', main = 'Average Total P
 
 hist(df$Avg_Medicare_Payments, xlab = 'Payments ($)', main = 'Average Medicare Payments')
 hist(trim(df$Avg_Medicare_Payments), xlab = 'Payments ($)', main = 'Average Medicare Payments w/o Outliers')
+# with them we can see the most frequent values for discharges, charges, total and medicare payments
 
 # creating vectors for each US region 
 northeast <- c("CT", "ME", "MA", "NH", "NJ", "NY", "PA", "RI", "VT")
@@ -55,13 +57,23 @@ northeast_disch <- sum(df_northeast$Total_Discharges)
 south_disch <- sum(df_south$Total_Discharges)
 midwest_disch <- sum(df_midwest$Total_Discharges)
 west_disch <- sum(df_west$Total_Discharges)
-# South has more number of discharges than the others
 
-# statistic overview of each US region
-summary(df_northeast)
-# plotting the total discharges per region
+# plotting total discharges per region
+library(ggplot2)
 disch_region <- data.frame(Region = c("Northeast", "South", "Midwest", "West"), Discharges = c(1075369, 1542689, 1182383, 839602))
 ggplot(disch_region, aes(x = Region, y = Discharges)) +  geom_bar(stat = "identity", fill='darkgreen') + labs(x = "Region", y = "Discharges", title = "Discharges per Region")
+# South has more number of discharges than the others
+
+# verifying number of providers per region
+providers_northeast <- nlevels(as.factor(df_northeast$Provider_Name))
+providers_south <- nlevels(as.factor(df_south$Provider_Name))
+providers_midwest <- nlevels(as.factor(df_midwest$Provider_Name))
+providers_west <- nlevels(as.factor(df_west$Provider_Name))
+
+# plotting number of providers per region
+providers_region <- data.frame(Region = c("Northeast", "South", "Midwest", "West"), Providers = c(providers_northeast,providers_south,providers_midwest,providers_west))
+ggplot(providers_region, aes(x=Region, y=Providers)) + geom_bar(stat = 'identity', fill = '#20B2AA')
+# south region has more providers, northeast has less
 
 # plotting discharges related to medicare payments
 install.packages('tidyverse')
@@ -71,9 +83,10 @@ ggplot(data = df_south) + geom_point(mapping = aes(x=Total_Discharges, y=Avg_Med
 ggplot(data = df_midwest) + geom_point(mapping = aes(x=Total_Discharges, y=Avg_Medicare_Payments, color=Provider_State))
 ggplot(data = df_west) + geom_point(mapping = aes(x=Total_Discharges, y=Avg_Medicare_Payments, color=Provider_State))
 # for higher costs of providers services, less discharges are registered. Cheaper treatments are more common.
+# REMOVE OUTLIERS LATER TO A BETTER VISUALIZATION
 
 #plotting covered charges related to medicare payments
-ggplot(data = df) + geom_point(mapping = aes(x=Avg_Covered_Charges, y=Avg_Medicare_Payments), color = '#40E0D0') + geom_smooth(mapping = aes(x=Avg_Total_Payments, y=Avg_Medicare_Payments))
+ggplot(data = df) + geom_point(mapping = aes(x=Avg_Covered_Charges, y=Avg_Medicare_Payments), color = '#40E0D0') + geom_smooth(mapping = aes(x=Avg_Covered_Charges, y=Avg_Medicare_Payments))
 cor(df$Avg_Covered_Charges, df$Avg_Medicare_Payments) # high correlation: +0.81
 # high positive correlation, means that for higher charges, higher medicare payments
 
