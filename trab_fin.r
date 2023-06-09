@@ -94,3 +94,35 @@ cor(df$Avg_Covered_Charges, df$Avg_Medicare_Payments) # high correlation: +0.81
 ggplot(data = df) + geom_point(mapping = aes(x=Avg_Total_Payments, y=Avg_Medicare_Payments), color = '#BA55D3') + geom_smooth(mapping = aes(x=Avg_Total_Payments, y=Avg_Medicare_Payments))
 cor(df$Avg_Total_Payments, df$Avg_Medicare_Payments) # very high correlation: +0.98
 
+# creating column 'Region' on the separated data frames by region
+library(dplyr)
+df_northeast <- mutate(df_northeast, Region = 'Northeast')
+df_south <- mutate(df_south, Region = 'South')
+df_midwest <- mutate(df_midwest, Region = 'Midwest')
+df_west <- mutate(df_west, Region = 'West')
+
+# Join multiple data.frames
+df <- rbind(df_northeast,df_south,df_midwest,df_west)
+
+# box plots grouped by region
+library(ggplot2)
+df$Region <- as.factor(df$Region)
+bp1 <- ggplot(df, aes(x=Region, y=Total_Discharges, color=Region)) + geom_boxplot(outlier.alpha = 0) + coord_cartesian(ylim = c(5, 70))
+bp2 <- ggplot(df, aes(x=Region, y=Avg_Covered_Charges, color=Region)) + geom_boxplot(outlier.alpha = 0) + coord_cartesian(ylim = c(0, 250000))
+bp3 <- ggplot(df, aes(x=Region, y=Avg_Total_Payments, color=Region)) + geom_boxplot(outlier.alpha = 0) + coord_cartesian(ylim = c(0, 50000))
+bp4 <- ggplot(df, aes(x=Region, y=Avg_Medicare_Payments, color=Region)) + geom_boxplot(outlier.alpha = 0) + coord_cartesian(ylim = c(0, 45000))
+
+# plotting histograms of numeric variables
+h1 <- ggplot(data = df, aes(x = Total_Discharges)) + geom_histogram(fill = '#9ACD32') + xlim(0, 100)
+h2 <- ggplot(data = df, aes(x = Avg_Covered_Charges)) + geom_histogram(fill = '#B8860B') + xlim(0, 300000)
+h3 <- ggplot(data = df, aes(x = Avg_Total_Payments)) + geom_histogram(fill = '#DA70D6') + xlim(0, 50000)
+h4 <- ggplot(data = df, aes(x = Avg_Medicare_Payments)) + geom_histogram(fill = '#FF6347') + xlim(0, 50000)
+# arranging histograms
+install.packages("ggpubr")
+library(ggpubr)
+ggarrange(h1,h2)
+ggarrange(h3,h4)
+
+#arranging boxplots
+ggarrange(bp1,bp2)
+ggarrange(bp3,bp4)
