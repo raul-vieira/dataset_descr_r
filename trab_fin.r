@@ -16,10 +16,17 @@ nlevels(as.factor(df$Provider_State))
 nlevels(as.factor(df$Provider_City))
 nlevels(as.factor(df$Diagnosis_Definition))
 
-# which is the most expensive service
+# which is the most expensive service registered
 which.max(df$Avg_Covered_Charges)
-df$Diagnosis_Description[18746]
-# LIVER TRANSPLANT WITH MCC OR INTESTINAL TRANSPLANT is the most expensive service registered
+df$Diagnosis_Description[140137]
+df$Avg_Covered_Charges[140137]
+# LIVER TRANSPLANT WITH MCC OR INTESTINAL TRANSPLANT is the most expensive service registered, charged in 3697459 dollars
+
+# which is the cheapest service registered
+which.min(df$Avg_Covered_Charges)
+df$Diagnosis_Description[8509]
+df$Avg_Covered_Charges[8509]
+# ALCOHOL, DRUG ABUSE OR DEPENDENCE, LEFT AMA is the cheapest service registered, charged in 3340.84 dollars
 
 # defining function to remove outliers
 trim <- function(x){
@@ -41,8 +48,8 @@ hist(trim(df$Avg_Medicare_Payments), xlab = 'Payments ($)', main = 'Average Medi
 # with them we can see the most frequent values for discharges, charges, total and medicare payments
 
 # creating vectors for each US region 
-northeast <- c("CT", "ME", "MA", "NH", "NJ", "NY", "PA", "RI", "VT")
-south <- c("AL", "AR", "FL", "GA", "KY", "LA", "MS", "NC", "SC", "TN", "VA", "WV")
+northeast <- c("CT", "ME", "MA", "NH", "NJ", "NY", "PA", "RI", "VT", "DE", "MD","DC")
+south <- c("AL", "AR", "FL", "GA", "KY", "LA", "MS", "NC", "SC", "TN", "TX", "VA", "WV", "OK")
 midwest <- c("IL", "IN", "IA", "KS", "MI", "MN", "MO", "NE", "ND", "OH", "SD", "WI")
 west <- c("AK", "AZ", "CA", "CO", "HI", "ID", "MT", "NV", "NM", "OR", "UT", "WA", "WY")
 
@@ -72,18 +79,18 @@ providers_west <- nlevels(as.factor(df_west$Provider_Name))
 
 # plotting number of providers per region
 providers_region <- data.frame(Region = c("Northeast", "South", "Midwest", "West"), Providers = c(providers_northeast,providers_south,providers_midwest,providers_west))
-ggplot(providers_region, aes(x=Region, y=Providers)) + geom_bar(stat = 'identity', fill = '#20B2AA')
+ggplot(providers_region, aes(x=Region, y=Providers)) + geom_bar(stat = 'identity', fill = '#20B2AA') + labs(x = "Region", y = "Providers", title = "Discharges per Region")
 # south region has more providers, northeast has less
 
 # plotting discharges related to medicare payments
 install.packages('tidyverse')
 library(tidyverse)
-ggplot(data = df_northeast) + geom_point(mapping = aes(x=Total_Discharges, y=Avg_Medicare_Payments, color=Provider_State))
-ggplot(data = df_south) + geom_point(mapping = aes(x=Total_Discharges, y=Avg_Medicare_Payments, color=Provider_State))
-ggplot(data = df_midwest) + geom_point(mapping = aes(x=Total_Discharges, y=Avg_Medicare_Payments, color=Provider_State))
-ggplot(data = df_west) + geom_point(mapping = aes(x=Total_Discharges, y=Avg_Medicare_Payments, color=Provider_State))
+ggplot(data = df_northeast) + geom_point(mapping = aes(x=Total_Discharges, y=Avg_Medicare_Payments, color=Provider_State)) + coord_cartesian(ylim = c(0, 450000), xlim = c(0,1250)) + labs(title = 'Region: Northeast')
+ggplot(data = df_south) + geom_point(mapping = aes(x=Total_Discharges, y=Avg_Medicare_Payments, color=Provider_State)) + labs(title = 'Region: South') + coord_cartesian(ylim = c(0, 300000), xlim = c(0,1500))
+ggplot(data = df_midwest) + geom_point(mapping = aes(x=Total_Discharges, y=Avg_Medicare_Payments, color=Provider_State)) + labs(title = 'Region: Midwest')
+ggplot(data = df_west) + geom_point(mapping = aes(x=Total_Discharges, y=Avg_Medicare_Payments, color=Provider_State)) + labs(title = 'Region: West') + coord_cartesian(ylim = c(0, 500000), xlim = c(0,850))
 # for higher costs of providers services, less discharges are registered. Cheaper treatments are more common.
-# REMOVE OUTLIERS LATER TO A BETTER VISUALIZATION
+# Axes were limited to a better visualization of data
 
 #plotting covered charges related to medicare payments
 ggplot(data = df) + geom_point(mapping = aes(x=Avg_Covered_Charges, y=Avg_Medicare_Payments), color = '#40E0D0') + geom_smooth(mapping = aes(x=Avg_Covered_Charges, y=Avg_Medicare_Payments))
@@ -123,6 +130,39 @@ library(ggpubr)
 ggarrange(h1,h2)
 ggarrange(h3,h4)
 
-#arranging boxplots
+#arranging box plots
 ggarrange(bp1,bp2)
 ggarrange(bp3,bp4)
+
+# discovering which city from each state has more providers
+library(plyr)
+citynum_northeast <- df_northeast %>% count(Provider_City)
+which.max(citynum_northeast$n)
+citynum_northeast$n[220]
+citynum_northeast$Provider_City[220]
+# In northeast, New York is the city with more providers, 1383 registered
+
+citynum_south <- df_south %>% count(Provider_City)
+which.max(citynum_south$n)
+citynum_south$n[320]
+citynum_south$Provider_City[320]
+# In south, Houston is the city with more providers, 1039 registered
+
+citynum_midwest <- df_midwest %>% count(Provider_City)
+which.max(citynum_midwest$n)
+citynum_midwest$n[77]
+citynum_midwest$Provider_City[77]
+# In midwest, Chicago is the city with more providers, 1213 registered
+
+citynum_west <- df_west %>% count(Provider_City)
+which.max(citynum_west$n)
+citynum_west$n[193]
+citynum_west$Provider_City[193]
+# In west, Los Angeles is the city with more providers, 902 registered
+
+# discovering which service has higher number of offering providers
+serv_prov_num <- df %>% count(Diagnosis_Description)
+which.max(serv_prov_num$n)
+serv_prov_num$Diagnosis_Description[435]
+serv_prov_num$n[435]
+# RESPIRATORY INFECTIONS AND INFLAMMATIONS WITH MCC is the most provided service, by 2830 hospitals
