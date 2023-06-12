@@ -18,14 +18,14 @@ nlevels(as.factor(df$Diagnosis_Definition))
 
 # which is the most expensive service registered
 which.max(df$Avg_Covered_Charges)
-df$Diagnosis_Description[140137]
-df$Avg_Covered_Charges[140137]
+df$Diagnosis_Description[18746]
+df$Avg_Covered_Charges[18746]
 # LIVER TRANSPLANT WITH MCC OR INTESTINAL TRANSPLANT is the most expensive service registered, charged in 3697459 dollars
 
 # which is the cheapest service registered
 which.min(df$Avg_Covered_Charges)
-df$Diagnosis_Description[8509]
-df$Avg_Covered_Charges[8509]
+df$Diagnosis_Description[65609]
+df$Avg_Covered_Charges[65609]
 # ALCOHOL, DRUG ABUSE OR DEPENDENCE, LEFT AMA is the cheapest service registered, charged in 3340.84 dollars
 
 # defining function to remove outliers
@@ -102,6 +102,7 @@ ggplot(data = df) + geom_point(mapping = aes(x=Avg_Total_Payments, y=Avg_Medicar
 cor(df$Avg_Total_Payments, df$Avg_Medicare_Payments) # very high correlation: +0.98
 
 # creating column 'Region' on the separated data frames by region
+install.packages("dplyr")
 library(dplyr)
 df_northeast <- mutate(df_northeast, Region = 'Northeast')
 df_south <- mutate(df_south, Region = 'South')
@@ -124,6 +125,7 @@ h1 <- ggplot(data = df, aes(x = Total_Discharges)) + geom_histogram(fill = '#9AC
 h2 <- ggplot(data = df, aes(x = Avg_Covered_Charges)) + geom_histogram(fill = '#B8860B') + xlim(0, 300000)
 h3 <- ggplot(data = df, aes(x = Avg_Total_Payments)) + geom_histogram(fill = '#DA70D6') + xlim(0, 50000)
 h4 <- ggplot(data = df, aes(x = Avg_Medicare_Payments)) + geom_histogram(fill = '#FF6347') + xlim(0, 50000)
+
 # arranging histograms
 install.packages("ggpubr")
 library(ggpubr)
@@ -136,33 +138,63 @@ ggarrange(bp3,bp4)
 
 # discovering which city from each state has more providers
 library(plyr)
-citynum_northeast <- df_northeast %>% count(Provider_City)
-which.max(citynum_northeast$n)
-citynum_northeast$n[220]
-citynum_northeast$Provider_City[220]
+citynum_northeast <- count(df_northeast$Provider_City)
+which.max(citynum_northeast$freq)
+citynum_northeast$freq[220]
+citynum_northeast$x[220]
 # In northeast, New York is the city with more providers, 1383 registered
 
-citynum_south <- df_south %>% count(Provider_City)
-which.max(citynum_south$n)
-citynum_south$n[320]
-citynum_south$Provider_City[320]
+citynum_south <- count(df_south$Provider_City)
+which.max(citynum_south$freq)
+citynum_south$freq[320]
+citynum_south$x[320]
 # In south, Houston is the city with more providers, 1039 registered
 
-citynum_midwest <- df_midwest %>% count(Provider_City)
-which.max(citynum_midwest$n)
-citynum_midwest$n[77]
-citynum_midwest$Provider_City[77]
+citynum_midwest <- count(df_midwest$Provider_City)
+which.max(citynum_midwest$freq)
+citynum_midwest$freq[77]
+citynum_midwest$x[77]
 # In midwest, Chicago is the city with more providers, 1213 registered
 
-citynum_west <- df_west %>% count(Provider_City)
-which.max(citynum_west$n)
-citynum_west$n[193]
-citynum_west$Provider_City[193]
+citynum_west <- count(df_west$Provider_City)
+which.max(citynum_west$freq)
+citynum_west$freq[193]
+citynum_west$x[193]
 # In west, Los Angeles is the city with more providers, 902 registered
 
 # discovering which service has higher number of offering providers
-serv_prov_num <- df %>% count(Diagnosis_Description)
-which.max(serv_prov_num$n)
-serv_prov_num$Diagnosis_Description[435]
-serv_prov_num$n[435]
+serv_prov_num <- count(df$Diagnosis_Description)
+which.max(serv_prov_num$freq)
+serv_prov_num$x[435]
+serv_prov_num$freq[435]
 # RESPIRATORY INFECTIONS AND INFLAMMATIONS WITH MCC is the most provided service, by 2830 hospitals
+
+# discovering how many providers registered in total
+total_prov <- count(df$Provider_Name)
+nrow(total_prov)
+# 2979 providers in US
+
+# discovering total receipts of each region and plotting bars with it
+df_2 <- mutate(df, Total_Receipt = df$Total_Discharges*df$Avg_Total_Payments)
+
+northeast_receipt <- df_2 %>% filter(Region == 'Northeast')
+total_northeast_rec <- sum(northeast_receipt$Total_Receipt)
+
+south_receipt <- df_2 %>% filter(Region == 'South')
+total_south_rec <- sum(south_receipt$Total_Receipt)
+
+midwest_receipt <- df_2 %>% filter(Region == 'Midwest')
+total_midwest_rec <- sum(midwest_receipt$Total_Receipt)
+
+west_receipt <- df_2 %>% filter(Region == 'West')
+total_west_rec <- sum(west_receipt$Total_Receipt)
+
+df_receipts <- data.frame(Region = c("Northeast", "South", "Midwest", "West"), Receipts = c(total_northeast_rec,total_south_rec,total_midwest_rec,total_west_rec))
+
+total_us_receipt <- sum(df_receipts$Receipts)
+total_us_receipt
+# 92.2 billion dollars of receipt from all hospitals
+
+ggplot(df_receipts, aes(x = Region, y = Receipts)) + geom_bar(stat = "identity", fill='#2E8B57') + labs(x = "Region", y = "Receipt (R$)", title = "Receipts per Region")
+# South has the major receipt (over 30 billion dollars), while west has the lowest (over 17 billion dollars)
+       
