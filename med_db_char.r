@@ -1,3 +1,11 @@
+# installing all packages necessary
+install.packages("readr")
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("tidyverse")
+install.packages("ggpubr")
+install.packages("plyr")
+
 # importing database
 library(readr)
 db <- read_csv('MUP_IHP_RY23_P03_V10_DY21_PRVSVC.CSV')
@@ -8,32 +16,37 @@ df <- db %>% select(Provider_Name, Provider_City, Provider_State,
                     Diagnosis_Definition, Diagnosis_Description, 
                     Total_Discharges, Avg_Covered_Charges, Avg_Total_Payments,
                     Avg_Medicare_Payments)
+
 # database overview
 summary(df)
 str(df)
-# counting States, Cities and Diagnosis
+
+# counting how many different States, Cities and Diagnosis exists in data
 nlevels(as.factor(df$Provider_State))
 nlevels(as.factor(df$Provider_City))
 nlevels(as.factor(df$Diagnosis_Definition))
 
-# which is the most expensive service registered
+# exploring which is the most expensive service registered
 which.max(df$Avg_Covered_Charges)
 df$Diagnosis_Description[18746]
 df$Avg_Covered_Charges[18746]
-# LIVER TRANSPLANT WITH MCC OR INTESTINAL TRANSPLANT is the most expensive service registered, charged in 3697459 dollars
+# LIVER TRANSPLANT WITH MCC OR INTESTINAL TRANSPLANT is the most expensive service
+# registered, charged in 3697459 dollars
 
-# which is the cheapest service registered
+# exploring which is the cheapest service registered
 which.min(df$Avg_Covered_Charges)
 df$Diagnosis_Description[65609]
 df$Avg_Covered_Charges[65609]
-# ALCOHOL, DRUG ABUSE OR DEPENDENCE, LEFT AMA is the cheapest service registered, charged in 3340.84 dollars
+# ALCOHOL, DRUG ABUSE OR DEPENDENCE, LEFT AMA is the cheapest service registered,
+# charged in 3340.84 dollars
 
-# defining function to remove outliers
+# defining a trim function to remove outliers
 trim <- function(x){
-  x[(x > quantile(x, probs = c(0.25), na.rm=TRUE)-1.5*IQR(x, na.rm=TRUE)) & (x < quantile(x, probs = c(0.75), na.rm=TRUE)+1.5*IQR(x,na.rm=TRUE))]
+  x[(x > quantile(x, probs = c(0.25), na.rm=TRUE)-1.5*IQR(x, na.rm=TRUE)) & 
+(x < quantile(x, probs = c(0.75), na.rm=TRUE)+1.5*IQR(x,na.rm=TRUE))]
 }
 
-# histograms of numerical variables
+# plotting histograms of numerical variables
 hist(df$Total_Discharges, xlab = 'Payments ($)', main = 'Average Medicare Payments')
 hist(trim(df$Total_Discharges), xlab = 'Payments ($)', main = 'Average Medicare Payments w/o Outliers')
 
@@ -45,9 +58,9 @@ hist(trim(df$Avg_Total_Payments), xlab = 'Payments ($)', main = 'Average Total P
 
 hist(df$Avg_Medicare_Payments, xlab = 'Payments ($)', main = 'Average Medicare Payments')
 hist(trim(df$Avg_Medicare_Payments), xlab = 'Payments ($)', main = 'Average Medicare Payments w/o Outliers')
-# with them we can see the most frequent values for discharges, charges, total and medicare payments
+# with them we can see the most frequent values for discharges, covered charges, total and medicare payments
 
-# creating vectors for each US region 
+# creating vectors for each US region - considered northeast geographic location of DC
 northeast <- c("CT", "ME", "MA", "NH", "NJ", "NY", "PA", "RI", "VT", "DE", "MD","DC")
 south <- c("AL", "AR", "FL", "GA", "KY", "LA", "MS", "NC", "SC", "TN", "TX", "VA", "WV", "OK")
 midwest <- c("IL", "IN", "IA", "KS", "MI", "MN", "MO", "NE", "ND", "OH", "SD", "WI")
@@ -83,7 +96,6 @@ ggplot(providers_region, aes(x=Region, y=Providers)) + geom_bar(stat = 'identity
 # south region has more providers, northeast has less
 
 # plotting discharges related to medicare payments
-install.packages('tidyverse')
 library(tidyverse)
 ggplot(data = df_northeast) + geom_point(mapping = aes(x=Total_Discharges, y=Avg_Medicare_Payments, color=Provider_State)) + coord_cartesian(ylim = c(0, 450000), xlim = c(0,1250)) + labs(title = 'Region: Northeast')
 ggplot(data = df_south) + geom_point(mapping = aes(x=Total_Discharges, y=Avg_Medicare_Payments, color=Provider_State)) + labs(title = 'Region: South') + coord_cartesian(ylim = c(0, 300000), xlim = c(0,1500))
@@ -102,18 +114,15 @@ ggplot(data = df) + geom_point(mapping = aes(x=Avg_Total_Payments, y=Avg_Medicar
 cor(df$Avg_Total_Payments, df$Avg_Medicare_Payments) # very high correlation: +0.98
 
 # creating column 'Region' on the separated data frames by region
-install.packages("dplyr")
-library(dplyr)
 df_northeast <- mutate(df_northeast, Region = 'Northeast')
 df_south <- mutate(df_south, Region = 'South')
 df_midwest <- mutate(df_midwest, Region = 'Midwest')
 df_west <- mutate(df_west, Region = 'West')
 
-# Join multiple data.frames
+# Joining those multiple data.frames
 df <- rbind(df_northeast,df_south,df_midwest,df_west)
 
-# box plots grouped by region
-library(ggplot2)
+# plotting box plots grouped by region
 df$Region <- as.factor(df$Region)
 bp1 <- ggplot(df, aes(x=Region, y=Total_Discharges, color=Region)) + geom_boxplot(outlier.alpha = 0) + coord_cartesian(ylim = c(5, 70))
 bp2 <- ggplot(df, aes(x=Region, y=Avg_Covered_Charges, color=Region)) + geom_boxplot(outlier.alpha = 0) + coord_cartesian(ylim = c(0, 250000))
@@ -127,7 +136,6 @@ h3 <- ggplot(data = df, aes(x = Avg_Total_Payments)) + geom_histogram(fill = '#D
 h4 <- ggplot(data = df, aes(x = Avg_Medicare_Payments)) + geom_histogram(fill = '#FF6347') + xlim(0, 50000)
 
 # arranging histograms
-install.packages("ggpubr")
 library(ggpubr)
 ggarrange(h1,h2)
 ggarrange(h3,h4)
@@ -197,4 +205,8 @@ total_us_receipt
 
 ggplot(df_receipts, aes(x = Region, y = Receipts)) + geom_bar(stat = "identity", fill='#2E8B57') + labs(x = "Region", y = "Receipt (R$)", title = "Receipts per Region")
 # South has the major receipt (over 30 billion dollars), while west has the lowest (over 17 billion dollars)
-       
+
+# plotting a correlation matrix with numeric variables
+library(corrplot)
+df_numeric <- data.frame(df$Total_Discharges,df$Avg_Covered_Charges,df$Avg_Total_Payments,df$Avg_Medicare_Payments)
+corrplot(cor(df_numeric), method = "square")
