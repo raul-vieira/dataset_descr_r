@@ -5,7 +5,7 @@ install.packages("ggplot2")
 install.packages("tidyverse")
 install.packages("ggpubr")
 install.packages("plyr")
-
+install.packages("DataExplorer")
 # importing database
 library(readr)
 db <- read_csv('MUP_IHP_RY23_P03_V10_DY21_PRVSVC.CSV')
@@ -47,8 +47,8 @@ trim <- function(x){
 }
 
 # plotting histograms of numerical variables
-hist(df$Total_Discharges, xlab = 'Payments ($)', main = 'Average Medicare Payments')
-hist(trim(df$Total_Discharges), xlab = 'Payments ($)', main = 'Average Medicare Payments w/o Outliers')
+hist(df$Total_Discharges, xlab = 'Payments ($)', main = 'Total Discharges')
+hist(trim(df$Total_Discharges), xlab = 'Payments ($)', main = 'Total Discharges w/o Outliers')
 
 hist(df$Avg_Covered_Charges, xlab = 'Charges ($)', main = 'Average Covered Charges')
 hist(trim(df$Avg_Covered_Charges), xlab = 'Charges ($)', main = 'Average Covered Charges w/o Outliers')
@@ -146,29 +146,34 @@ ggarrange(bp3,bp4)
 
 # discovering which city from each state has more providers
 library(plyr)
-citynum_northeast <- count(df_northeast$Provider_City)
-which.max(citynum_northeast$freq)
-citynum_northeast$freq[220]
-citynum_northeast$x[220]
-# In northeast, New York is the city with more providers, 1383 registered
+df_prov_city_northeast <- unique(select(df_northeast, Provider_Name, Provider_City))
+citynum_northeast <- df_prov_city_northeast %>% count(Provider_City, Provider_City)
+which.max(citynum_northeast$n)
+citynum_northeast$n[12]
+citynum_northeast$Provider_City[12]
+# In northeast, Baltimore is the city with more providers, 14 registered
 
-citynum_south <- count(df_south$Provider_City)
-which.max(citynum_south$freq)
-citynum_south$freq[320]
-citynum_south$x[320]
-# In south, Houston is the city with more providers, 1039 registered
 
-citynum_midwest <- count(df_midwest$Provider_City)
-which.max(citynum_midwest$freq)
-citynum_midwest$freq[77]
-citynum_midwest$x[77]
-# In midwest, Chicago is the city with more providers, 1213 registered
+df_prov_city_south <- unique(select(df_south, Provider_Name, Provider_City))
+citynum_south <- df_prov_city_south %>% count(Provider_City, Provider_City)
+which.max(citynum_south$n)
+citynum_south$n[320]
+citynum_south$Provider_City[320]
+# In south, Houston is the city with more providers, 18 registered
 
-citynum_west <- count(df_west$Provider_City)
-which.max(citynum_west$freq)
-citynum_west$freq[193]
-citynum_west$x[193]
-# In west, Los Angeles is the city with more providers, 902 registered
+df_prov_city_midwest <- unique(select(df_midwest, Provider_Name, Provider_City))
+citynum_midwest <- df_prov_city_midwest %>% count(Provider_City, Provider_City)
+which.max(citynum_midwest$n)
+citynum_midwest$n[77]
+citynum_midwest$Provider_City[77]
+# In midwest, Chicago is the city with more providers, 25 registered
+
+df_prov_city_west <- unique(select(df_west, Provider_Name, Provider_City))
+citynum_west <- df_prov_city_west %>% count(Provider_City, Provider_City)
+which.max(citynum_west$n)
+citynum_west$n[193]
+citynum_west$Provider_City[193]
+# In west, Los Angeles is the city with more providers, 16 registered
 
 # discovering which service has higher number of offering providers
 serv_prov_num <- count(df$Diagnosis_Description)
@@ -210,3 +215,6 @@ ggplot(df_receipts, aes(x = Region, y = Receipts)) + geom_bar(stat = "identity",
 library(corrplot)
 df_numeric <- data.frame(df$Total_Discharges,df$Avg_Covered_Charges,df$Avg_Total_Payments,df$Avg_Medicare_Payments)
 corrplot(cor(df_numeric), method = "square")
+
+library(DataExplorer)
+create_report(df)
